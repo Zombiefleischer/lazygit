@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/jesseduffield/lazycore/pkg/utils"
 	"github.com/jesseduffield/lazygit/pkg/commands/git_commands"
@@ -134,9 +135,9 @@ func buildLazygit() error {
 	// return nil
 
 	osCommand := oscommands.NewDummyOSCommand()
-	return osCommand.Cmd.New(fmt.Sprintf(
-		"go build -o %s pkg/integration/clients/injector/main.go", tempLazygitPath(),
-	)).Run()
+	return osCommand.Cmd.NewFromArgs([]string{
+		"go", "build", "-o", tempLazygitPath(), filepath.FromSlash("pkg/integration/clients/injector/main.go"),
+	}).Run()
 }
 
 func createFixture(test *IntegrationTest, paths Paths, rootDir string) error {
@@ -197,7 +198,12 @@ func getLazygitCommand(test *IntegrationTest, paths Paths, rootDir string, sandb
 }
 
 func tempLazygitPath() string {
-	return filepath.Join("/tmp", "lazygit", "test_lazygit")
+	filename := "test_lazygit"
+	if runtime.GOOS == "windows" {
+		filename += ".exe"
+	}
+
+	return filepath.Join(os.TempDir(), "lazygit", filename)
 }
 
 func findOrCreateDir(path string) {
